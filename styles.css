@@ -1,0 +1,14 @@
+html,body{margin:0;height:100%;background:#050508;color:#fff;font-family:system-ui,sans-serif;overflow:hidden;touch-action:none}
+canvas{display:block;margin:0 auto;background:#0a0a0f}
+#hud{position:absolute;top:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:5;flex-wrap:wrap;padding:0 8px}
+#hud div{background:rgba(0,0,0,.65);padding:8px 12px;border-radius:999px;font-weight:800;backdrop-filter:blur(6px);cursor:pointer}
+#ctrl{position:absolute;bottom:18px;left:0;right:0;display:flex;justify-content:space-between;padding:0 18px;z-index:5}
+#ctrl button{width:130px;height:130px;border-radius:50%;border:none;background:radial-gradient(circle at 30% 30%,#ff5252,#c62828);color:#fff;font-size:52px;font-weight:900;box-shadow:0 0 30px rgba(255,82,82,.6),inset 0 -8px 0 rgba(0,0,0,.3)}
+#ctrl button:active{transform:scale(.95)}
+#shop{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.92);z-index:20;padding:20px}
+#shop.show{display:flex}
+.card{background:#141c2f;padding:24px;border-radius:20px;max-width:420px;width:100%}
+.grid{display:grid;gap:10px}
+.btn{padding:12px;border:none;border-radius:12px;background:#1e293b;color:#fff;font-weight:700;text-align:left}
+.btn span{float:right;opacity:.8}
+.close{margin-top:12px;width:100%;padding:12px;border:none;border-radius:12px;background:#ff9f0a;color:#111;font-weight:900}
