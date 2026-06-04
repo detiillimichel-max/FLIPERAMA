@@ -1,11 +1,23 @@
 <!DOCTYPE html>
 <html lang="pt-BR"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Pinball Realista</title>
-<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0a0a0f">
-<link rel="stylesheet" href="style.css">
+<style>html,body{margin:0;height:100%;background:#050508;color:#fff;font-family:system-ui,sans-serif;overflow:hidden;touch-action:none}
+canvas{display:block;margin:0 auto;background:#0a0a0f}
+#hud{position:absolute;top:10px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:5;flex-wrap:wrap;padding:0 8px}
+#hud div{background:rgba(0,0,0,.65);padding:8px 12px;border-radius:999px;font-weight:800;backdrop-filter:blur(6px);cursor:pointer}
+#ctrl{position:absolute;bottom:18px;left:0;right:0;display:flex;justify-content:space-between;padding:0 18px;z-index:5}
+#ctrl button{width:130px;height:130px;border-radius:50%;border:none;background:radial-gradient(circle at 30% 30%,#ff5252,#c62828);color:#fff;font-size:52px;font-weight:900;box-shadow:0 0 30px rgba(255,82,82,.6),inset 0 -8px 0 rgba(0,0,0,.3)}
+#ctrl button:active{transform:scale(.95)}
+#shop{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.92);z-index:20;padding:20px}
+#shop.show{display:flex}
+.card{background:#141c2f;padding:24px;border-radius:20px;max-width:420px;width:100%}
+.grid{display:grid;gap:10px}
+.btn{padding:12px;border:none;border-radius:12px;background:#1e293b;color:#fff;font-weight:700;text-align:left}
+.btn span{float:right;opacity:.8}
+.close{margin-top:12px;width:100%;padding:12px;border:none;border-radius:12px;background:#ff9f0a;color:#111;font-weight:900}
+</style>
 </head><body>
 <div id="hud">
  <div>⭐ <span id="score">0</span></div>
@@ -15,7 +27,6 @@
 </div>
 <canvas id="cv" width="420" height="800"></canvas>
 <div id="ctrl"><button id="l">◀</button><button id="r">▶</button></div>
-
 <div id="shop"><div class="card"><h1>Loja</h1>
  <div class="grid">
   <button class="btn" data-buy="ball">Bola Extra <span>500</span></button>
@@ -24,9 +35,91 @@
  </div>
  <button class="close" id="closeShop">Fechar</button>
 </div></div>
-
-<script src="script.js"></script>
-<script>
-if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}
+<script>const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const W=cv.width,H=cv.height;
+let ball={x:W-60,y:H-220,r:10,vx:0,vy:0,held:true},left=false,right=false,score=0,balls=3;
+const flippers=[
+ {x:W*0.30,y:H-150,len:100,ang:-0.4,rest:-0.4,active:0.4,w:22},
+ {x:W*0.70,y:H-150,len:100,ang:Math.PI+0.4,rest:Math.PI+0.4,active:Math.PI-0.4,w:22}
+];
+const bumpers=[
+ {x:W*0.5,y:H*0.28,r:32,val:100},
+ {x:W*0.35,y:H*0.38,r:30,val:100},
+ {x:W*0.65,y:H*0.38,r:30,val:100}
+];
+const slings=[
+ {x:W*0.22,y:H-220,ang:-0.8},
+ {x:W*0.78,y:H-220,ang:Math.PI+0.8}
+];
+function launch(){if(ball.held){ball.held=false;ball.vx=-0.5;ball.vy=-20}}
+function resetBall(){ball.x=W-60;ball.y=H-220;ball.vx=0;ball.vy=0;ball.held=true}
+resetBall();
+function loop(){
+ ctx.fillStyle='#0a0a0f';ctx.fillRect(0,0,W,H);
+ ctx.fillStyle='#111827';ctx.fillRect(30,30,W-60,H-140);
+ ctx.fillStyle='#1f2937';ctx.fillRect(W-75,30,45,H-170);
+ ctx.fillStyle='#374151';ctx.fillRect(W-80,30,5,H-170);
+ ctx.strokeStyle='#374151';ctx.lineWidth=8;ctx.beginPath();ctx.arc(W/2,120,W/2-40,Math.PI,0);ctx.stroke();
+ bumpers.forEach(b=>{
+   ctx.save();ctx.translate(b.x,b.y);
+   const g=ctx.createRadialGradient(0,0,5,0,0,b.r);
+   g.addColorStop(0,'#fff');g.addColorStop(1,'#f59e0b');
+   ctx.fillStyle=g;ctx.shadowColor='#f59e0b';ctx.shadowBlur=15;
+   ctx.beginPath();ctx.arc(0,0,b.r,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle='#000';ctx.font='bold 14px sans-serif';ctx.textAlign='center';ctx.fillText(b.val,0,4);
+   ctx.restore();
+   if(!ball.held){const dx=ball.x-b.x,dy=ball.y-b.y,d=Math.hypot(dx,dy);if(d<b.r+ball.r){const nx=dx/d,ny=dy/d;ball.vx=nx*12;ball.vy=ny*12;score+=b.val}}
+ });
+ slings.forEach(s=>{
+   ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.ang);
+   ctx.fillStyle='#dc2626';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(50,20);ctx.lineTo(50,-20);ctx.closePath();ctx.fill();
+   ctx.restore();
+ });
+ flippers.forEach((f,i)=>{
+   const target=(i===0?left:right)?f.active:f.rest;
+   f.ang+=(target-f.ang)*0.5;
+   ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.ang);
+   ctx.fillStyle='#e5e7eb';ctx.fillRect(0,-f.w/2,f.len,f.w);
+   ctx.fillStyle='#ef4444';ctx.beginPath();ctx.arc(0,0,f.w/2,0,Math.PI*2);ctx.fill();
+   ctx.restore();
+   if(!ball.held){
+     const ex=f.x+Math.cos(f.ang)*f.len,ey=f.y+Math.sin(f.ang)*f.len;
+     const lx=ex-f.x,ly=ey-f.y,l2=lx*lx+ly*ly;
+     let t=((ball.x-f.x)*lx+(ball.y-f.y)*ly)/l2;t=Math.max(0,Math.min(1,t));
+     const px=f.x+t*lx,py=f.y+t*ly,dx=ball.x-px,dy=ball.y-py,d=Math.hypot(dx,dy);
+     if(d<ball.r+f.w/2){const nx=dx/d,ny=dy/d;ball.vx=nx*14;ball.vy=ny*14;score+=10}
+   }
+ });
+ ctx.fillStyle='#374151';
+ ctx.fillRect(30,30,W-60,10);
+ ctx.fillRect(30,30,10,H-140);
+ ctx.fillRect(W-40,30,10,H-140);
+ ctx.fillRect(40,H-160, W*0.25,10);
+ ctx.fillRect(W-40-W*0.25, H-160, W*0.25,10);
+ if(!ball.held){ball.vy+=0.42;ball.x+=ball.vx;ball.y+=ball.vy;ball.vx*=0.999}
+ if(ball.x<45+ball.r){ball.x=45+ball.r;ball.vx*=-0.7}
+ if(ball.x>W-45-ball.r){ball.x=W-45-ball.r;ball.vx*=-0.7}
+ if(ball.y<45+ball.r){ball.y=45+ball.r;ball.vy*=-0.7}
+ if(ball.y>H-130){const inDrain=ball.x>W*0.38 && ball.x<W*0.62; if(inDrain){balls--;document.getElementById('balls').textContent=balls;resetBall()} else if(ball.y>H-100){ball.vy=-8}}
+ ctx.save();ctx.translate(ball.x,ball.y);
+ const gb=ctx.createRadialGradient(-3,-3,2,0,0,ball.r);gb.addColorStop(0,'#fff');gb.addColorStop(1,'#ef4444');
+ ctx.fillStyle=gb;ctx.shadowColor='#ef4444';ctx.shadowBlur=12;
+ ctx.beginPath();ctx.arc(0,0,ball.r,0,Math.PI*2);ctx.fill();
+ ctx.restore();
+ document.getElementById('score').textContent=score;
+ requestAnimationFrame(loop);
+}
+document.getElementById('shopBtn').onclick=()=>document.getElementById('shop').classList.add('show');
+document.getElementById('closeShop').onclick=()=>document.getElementById('shop').classList.remove('show');
+document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{
+ const it=b.dataset.buy;
+ if(it==='ball'&&score>=500){score-=500;balls++}
+ if(it==='nudge'&&score>=200){ball.vx+=(Math.random()-0.5)*6;ball.vy-=4}
+ if(it==='theme'){document.body.style.filter=document.body.style.filter?'':'hue-rotate(180deg)'}
+ document.getElementById('balls').textContent=balls;
+});
+document.getElementById('l').onpointerdown=()=>{left=true;if(ball.held)launch()};document.getElementById('l').onpointerup=()=>left=false;
+document.getElementById('r').onpointerdown=()=>{right=true;if(ball.held)launch()};document.getElementById('r').onpointerup=()=>right=false;
+loop();
 </script>
 </body></html>
