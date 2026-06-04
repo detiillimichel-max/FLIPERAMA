@@ -2,8 +2,8 @@ const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 const W=cv.width,H=cv.height;
 let ball={x:W-60,y:H-220,r:10,vx:0,vy:0,held:true},left=false,right=false,score=0,balls=3;
 const flippers=[
- {x:W*0.30,y:H-150,len:100,ang:0.6,rest:0.6,active:-0.6,w:22},
- {x:W*0.70,y:H-150,len:100,ang:Math.PI-0.6,rest:Math.PI-0.6,active:Math.PI+0.6,w:22}
+ {x:W*0.30,y:H-150,len:100,ang:-0.5,rest:-0.5,active:0.5,w:22},
+ {x:W*0.70,y:H-150,len:100,ang:Math.PI+0.5,rest:Math.PI+0.5,active:Math.PI-0.5,w:22}
 ];
 // Realistic layout: 3 top bumpers triangle, 2 slingshots, side lanes
 const bumpers=[
