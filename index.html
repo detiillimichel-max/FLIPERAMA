@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Pinball Realista</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0a0f">
+<link rel="stylesheet" href="style.css">
+</head><body>
+<div id="hud">
+ <div>⭐ <span id="score">0</span></div>
+ <div>🎯 <span id="balls">3</span></div>
+ <div id="phase">Mesa 1</div>
+ <div id="shopBtn">🛒</div>
+</div>
+<canvas id="cv" width="420" height="800"></canvas>
+<div id="ctrl"><button id="l">◀</button><button id="r">▶</button></div>
+
+<div id="shop"><div class="card"><h1>Loja</h1>
+ <div class="grid">
+  <button class="btn" data-buy="ball">Bola Extra <span>500</span></button>
+  <button class="btn" data-buy="nudge">Nudge (empurrão) <span>200</span></button>
+  <button class="btn" data-buy="theme">Mesa Clássica / Neon <span>800</span></button>
+ </div>
+ <button class="close" id="closeShop">Fechar</button>
+</div></div>
+
+<script src="script.js"></script>
+<script>
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}
+</script>
+</body></html>
+
